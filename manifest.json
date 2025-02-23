@@ -1,0 +1,21 @@
+{
+    "name": "Json To TypeScript",
+    "short_name": "Json To Typescript",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#f5f6fa",
+    "theme_color": "#3498db",
+    "description": "Convert JSON to TypeScript - Generate interface or type from JSON. Type Inference - Detect string, number, boolean, array, and nested objects. Validation - Check if the input is valid JSON before conversion. Formatting & Prettify - Properly format and indent the output. Download as File - Allow users to export TypeScript code as a .ts file. Dark/Light Mode - Optional UI enhancement. Copy to Clipboard - Quick copy button for easy access.",
+    "icons": [
+        {
+            "src": "icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
