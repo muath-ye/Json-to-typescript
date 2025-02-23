@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to TypeScript</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" id="theme-link">
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --text-color: #fff;
+            --input-bg: #2d2d2d;
+            --button-bg: #007bff;
+            --button-hover: #0056b3;
+        }
+        
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --text-color: #000;
+            --input-bg: #f0f0f0;
+            --button-bg: #007bff;
+            --button-hover: #0056b3;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 80%;
+        }
+        textarea {
+            width: 45%;
+            height: 250px;
+            padding: 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            resize: none;
+            outline: none;
+            transition: background 0.3s, color 0.3s;
+        }
+        pre {
+            width: 45%;
+            max-height: 250px;
+            overflow: auto;
+            border-radius: 5px;
+            background: var(--input-bg);
+            padding: 10px;
+            transition: background 0.3s;
+        }
+        .buttons {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            background: var(--button-bg);
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: var(--button-hover);
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <h2>JSON to TypeScript Converter</h2>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+    <div class="container">
+        <textarea id="jsonInput" placeholder="Paste JSON here..."></textarea>
+        <pre><code id="tsOutput" class="language-typescript"></code></pre>
+    </div>
+    <div class="buttons">
+        <button onclick="copyToClipboard()">Copy</button>
+        <button onclick="downloadTS()">Download</button>
+    </div>
+    <p class="error" id="errorMsg"></p>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script>
+        function convertJsonToTs(json) {
+            try {
+                const obj = JSON.parse(json);
+                document.getElementById("errorMsg").textContent = "";
+                let generatedInterfaces = new Map();
+                let tsCode = generateTs(obj, "RootObject", generatedInterfaces);
+                let finalCode = Array.from(generatedInterfaces.values()).join("\n\n") + "\n" + tsCode;
+                document.getElementById("tsOutput").textContent = finalCode;
+                Prism.highlightAll();
+                return finalCode;
+            } catch (error) {
+                document.getElementById("errorMsg").textContent = "Invalid JSON";
+                return "";
+            }
+        }
+
+        function generateTs(obj, name, interfaces) {
+            if (interfaces.has(name)) return name;
+            let ts = `interface ${name} {\n`;
+            for (let key in obj) {
+                let type = typeof obj[key];
+                let isOptional = obj[key] === null || obj[key] === undefined ? "?" : "";
+                if (Array.isArray(obj[key])) {
+                    if (obj[key].length && typeof obj[key][0] === "object" && obj[key][0] !== null) {
+                        let subType = generateTs(obj[key][0], capitalizeFirstLetter(key), interfaces);
+                        type = `${subType}[]`;
+                    } else {
+                        type = obj[key].length ? typeof obj[key][0] + "[]" : "any[]";
+                    }
+                } else if (type === "object" && obj[key] !== null) {
+                    let subType = generateTs(obj[key], capitalizeFirstLetter(key), interfaces);
+                    type = subType;
+                }
+                ts += `    ${key}${isOptional}: ${type};\n`;
+            }
+            ts += `}`;
+            interfaces.set(name, ts);
+            return name;
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        document.getElementById("jsonInput").addEventListener("input", function() {
+            convertJsonToTs(this.value);
+        });
+
+        function copyToClipboard() {
+            const output = document.getElementById("tsOutput").textContent;
+            navigator.clipboard.writeText(output);
+            alert("Copied to clipboard!");
+        }
+
+        function downloadTS() {
+            const blob = new Blob([document.getElementById("tsOutput").textContent], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "types.d.ts";
+            a.click();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.dataset.theme = body.dataset.theme === "dark" ? "light" : "dark";
+        }
+    </script>
+</body>
+</html>
+
